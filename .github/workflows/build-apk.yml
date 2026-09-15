@@ -2,7 +2,7 @@ name: Build Android APK
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'arena/**']
   workflow_dispatch: # manual trigger from the Actions tab (works on any branch)
 
 permissions:
