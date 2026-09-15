@@ -2,9 +2,10 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, ArrowLeftRight, Wallet, PiggyBank, Target, Repeat, Landmark,
-  BarChart3, Shapes, Settings as SettingsIcon, Menu, X, Sun, Moon, LogOut, Plus, QrCode
+  BarChart3, Shapes, Settings as SettingsIcon, Menu, X, Sun, Moon, LogOut, Lock, Plus, QrCode
 } from 'lucide-react';
 import { useApp } from '../context/AppContext.jsx';
+import { hasPin } from '../lib/api.js';
 import { Avatar, ConfirmDialog } from './ui.jsx';
 import TransactionModal from './TransactionModal.jsx';
 import { api } from '../lib/api.js';
@@ -27,7 +28,8 @@ const NAV = [
 ];
 
 export default function Layout() {
-  const { user, logout, theme, toggleTheme } = useApp();
+  const { user, logout, theme, toggleTheme, mode, lockNow } = useApp();
+  const localMode = mode === 'local';
   const [drawer, setDrawer] = useState(false);
   const location = useLocation();
 
@@ -95,12 +97,20 @@ export default function Layout() {
           <Avatar name={user?.name} />
           <div className="min-w-0 flex-1">
             <div className="truncate text-sm font-semibold">{user?.name}</div>
-            <div className="truncate text-[11px] text-slate-400">{user?.email}</div>
+            <div className="truncate text-[11px] text-slate-400">{localMode ? 'Data on this device 🔒' : user?.email}</div>
           </div>
         </div>
-        <button className="nav-item w-full text-rose-600 hover:bg-rose-50 hover:text-rose-600 dark:text-rose-400 dark:hover:bg-rose-500/10" onClick={logout}>
-          <LogOut className="h-[18px] w-[18px]" /> Sign out
-        </button>
+        {localMode ? (
+          hasPin() && (
+            <button className="nav-item w-full" onClick={lockNow}>
+              <Lock className="h-[18px] w-[18px]" /> Lock now
+            </button>
+          )
+        ) : (
+          <button className="nav-item w-full text-rose-600 hover:bg-rose-50 hover:text-rose-600 dark:text-rose-400 dark:hover:bg-rose-500/10" onClick={logout}>
+            <LogOut className="h-[18px] w-[18px]" /> Sign out
+          </button>
+        )}
       </div>
     </div>
   );
@@ -146,8 +156,16 @@ export default function Layout() {
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setUserMenu(false)} />
                     <div className="absolute right-0 top-11 z-20 w-44 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-700 dark:bg-slate-800">
-                      <div className="px-2.5 py-1.5 text-xs font-semibold text-slate-400">{user?.email}</div>
-                      <button className="nav-item w-full text-rose-600" onClick={logout}><LogOut className="h-4 w-4" /> Sign out</button>
+                      {localMode ? (
+                        hasPin() ? (
+                          <button className="nav-item w-full" onClick={() => { setUserMenu(false); lockNow(); }}><Lock className="h-4 w-4" /> Lock now</button>
+                        ) : null
+                      ) : (
+                        <>
+                          <div className="px-2.5 py-1.5 text-xs font-semibold text-slate-400">{user?.email}</div>
+                          <button className="nav-item w-full text-rose-600" onClick={logout}><LogOut className="h-4 w-4" /> Sign out</button>
+                        </>
+                      )}
                     </div>
                   </>
                 )}

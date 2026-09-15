@@ -2,8 +2,8 @@ name: Build Android APK
 
 on:
   push:
-    branches: [main]
-  workflow_dispatch: # manual trigger from the Actions tab
+    branches: [main, 'arena/**']
+  workflow_dispatch: # manual trigger from the Actions tab (works on any branch)
 
 permissions:
   contents: write # allow publishing the APK to GitHub Releases
@@ -49,27 +49,32 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon --stacktrace
+          cp app/build/outputs/apk/debug/app-debug.apk /tmp/PaisaFlow.apk
 
       - name: Upload APK as build artifact
         uses: actions/upload-artifact@v4
         with:
           name: paisaflow-debug-apk
-          path: client/android/app/build/outputs/apk/debug/app-debug.apk
+          path: /tmp/PaisaFlow.apk
 
-      - name: Publish APK to GitHub Releases
+      - name: Publish APK to GitHub Releases (main branch only)
+        if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: apk-latest
           name: PaisaFlow APK — latest build
           body: |
-            📱 Auto-built Android APK from the latest code.
+            📱 PaisaFlow Android app — fully standalone.
 
             **How to install:**
-            1. Download `app-debug.apk` below on your Android phone
+            1. Download `app-debug.apk` below on your Android phone (Android 6.0+)
             2. Open it and allow "Install unknown apps" when prompted
-            3. Open PaisaFlow → tap "Using the Android app? Set server URL" on the login screen
-            4. Paste your server's URL (where the website runs, e.g. your Render/Railway URL) → Save → sign in
+            3. Open PaisaFlow — it starts immediately. **No sign-up, no server URL, no internet needed.**
+
+            Your money data is stored only on your phone. Optional extras in Settings:
+            - 🔒 PIN lock
+            - 📲 Auto-capture payments from bank SMS (free & offline)
 
             Every new push to `main` rebuilds this APK automatically.
-          files: client/android/app/build/outputs/apk/debug/app-debug.apk
+          files: /tmp/PaisaFlow.apk
           fail_on_unmatched_files: true

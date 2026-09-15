@@ -34,7 +34,6 @@ app.use('/api/loans', require('./routes/loans'));
 app.use('/api/requests', require('./routes/requests'));
 app.use('/api/reports', require('./routes/reports'));
 app.use('/api/dashboard', require('./routes/dashboard'));
-app.use('/api/settings', require('./routes/settings'));
 app.use('/api/data', require('./routes/data'));
 
 // Serve the built frontend (production)
@@ -53,11 +52,6 @@ app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).json({ error: 'Something went wrong on our side' });
 });
-
-// Weekly digest scheduler — checks every 15 minutes
-const { runDigestScheduler } = require('./digest');
-setTimeout(() => runDigestScheduler().catch((e) => console.error('[digest]', e)), 30 * 1000);
-setInterval(() => runDigestScheduler().catch((e) => console.error('[digest]', e)), 15 * 60 * 1000);
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, '0.0.0.0', () => {

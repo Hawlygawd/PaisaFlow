@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { api, setToken } from '../lib/api.js';
-import { CheckCircle2, XCircle, Info, AlertTriangle, X } from 'lucide-react';
+import { api, initApi, getMode, setToken } from '../lib/api.js';
+import { startSmsCapture } from '../lib/smsCapture.js';
+import { CheckCircle2, XCircle, Info, AlertTriangle, Smartphone, X } from 'lucide-react';
 
 const AppContext = createContext(null);
 export const useApp = () => useContext(AppContext);
@@ -9,13 +10,24 @@ const TOAST_ICONS = {
   success: <CheckCircle2 className="h-4 w-4 text-emerald-500" />,
   error: <XCircle className="h-4 w-4 text-rose-500" />,
   info: <Info className="h-4 w-4 text-indigo-500" />,
-  warning: <AlertTriangle className="h-4 w-4 text-amber-500" />
+  warning: <AlertTriangle className="h-4 w-4 text-amber-500" />,
+  sms: <Smartphone className="h-4 w-4 text-emerald-500" />
 };
 
+const RELOCK_DELAY_MS = 30000; // re-lock when the app was backgrounded for 30s+
+
 export function AppProvider({ children }) {
+  // ---------- mode (server vs fully-offline local) ----------
+  const [mode, setMode] = useState(() => getMode());
+
   // ---------- auth ----------
   const [user, setUser] = useState(null);
   const [initializing, setInitializing] = useState(true);
+
+  // ---------- PIN lock (local mode only) ----------
+  const [locked, setLocked] = useState(false);
+  const hiddenAtRef = useRef(0);
+  const pinEnabledRef = useRef(false);
 
   const refreshUser = useCallback(async () => {
     try {
@@ -27,11 +39,48 @@ export function AppProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    refreshUser().finally(() => setInitializing(false));
+    let alive = true;
+    (async () => {
+      const m = await initApi();
+      if (!alive) return;
+      setMode(m);
+      // In local mode there is no login — the profile is created/loaded on-device
+      // automatically. Server mode restores any existing session.
+      if (m === 'local') {
+        pinEnabledRef.current = hasPin();
+        if (pinEnabledRef.current) setLocked(true);
+      }
+      await refreshUser().catch(() => {});
+      if (alive) setInitializing(false);
+    })();
     const onUnauthorized = () => setUser(null);
     window.addEventListener('pf:unauthorized', onUnauthorized);
-    return () => window.removeEventListener('pf:unauthorized', onUnauthorized);
+    return () => {
+      alive = false;
+      window.removeEventListener('pf:unauthorized', onUnauthorized);
+    };
   }, [refreshUser]);
+
+  // Lock again after the app was in the background for a while (local + PIN set)
+  useEffect(() => {
+    const onVis = () => {
+      if (!pinEnabledRef.current || !getMode || getMode() !== 'local') return;
+      if (document.visibilityState === 'hidden') {
+        hiddenAtRef.current = Date.now();
+      } else if (hiddenAtRef.current && Date.now() - hiddenAtRef.current > RELOCK_DELAY_MS) {
+        hiddenAtRef.current = 0;
+        setLocked(true);
+      }
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+  }, []);
+
+  const pinChanged = useCallback((enabled) => {
+    pinEnabledRef.current = enabled;
+    if (!enabled) setLocked(false);
+  }, []);
+  const lockNow = useCallback(() => setLocked(true), []);
 
   const login = useCallback(async (email, password) => {
     const { user, token } = await api.post('/auth/login', { email, password });
@@ -51,6 +100,26 @@ export function AppProvider({ children }) {
     try { await api.post('/auth/logout', {}); } catch { /* ignore */ }
     setToken(null);
     setUser(null);
+  }, []);
+
+  // ---------- SMS auto-capture (local/Android only) ----------
+  useEffect(() => {
+    if (mode !== 'local' || initializing) return;
+    startSmsCapture(({ type, amount, account }) => {
+      const rupees = (amount / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+      window.dispatchEvent(new CustomEvent('pf:sms-captured', {
+        detail: { type, amount, account }
+      }));
+      // Toast via a tiny synthetic event the provider listens for (defined below)
+    });
+  }, [mode, initializing]);
+
+  useEffect(() => {
+    const onSms = (e) => toast('sms', e.detail.type === 'income'
+      ? `Auto-captured credit: ₹${(e.detail.amount / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 })}${e.detail.account ? ' → ' + e.detail.account : ''}`
+      : `Auto-captured expense: ₹${(e.detail.amount / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 })}${e.detail.account ? ' · ' + e.detail.account : ''}`);
+    window.addEventListener('pf:sms-captured', onSms);
+    return () => window.removeEventListener('pf:sms-captured', onSms);
   }, []);
 
   // ---------- theme ----------
@@ -75,8 +144,8 @@ export function AppProvider({ children }) {
   }, [dismissToast]);
 
   const value = useMemo(
-    () => ({ user, setUser, initializing, login, register, logout, refreshUser, theme, toggleTheme, toast }),
-    [user, initializing, login, register, logout, refreshUser, theme, toggleTheme, toast]
+    () => ({ user, setUser, initializing, login, register, logout, refreshUser, theme, toggleTheme, toast, mode, locked, setLocked, pinChanged, lockNow }),
+    [user, initializing, login, register, logout, refreshUser, theme, toggleTheme, toast, mode, locked, pinChanged, lockNow]
   );
 
   return (

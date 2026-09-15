@@ -16,7 +16,6 @@
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "express": "^4.21.2",
-    "jsonwebtoken": "^9.0.2",
-    "nodemailer": "^10.0.10"
+    "jsonwebtoken": "^9.0.2"
   }
 }

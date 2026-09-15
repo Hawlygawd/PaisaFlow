@@ -38,4 +38,9 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Auto-capture payments from bank transaction SMS (user-approved at runtime;
+         only used to log debits/credits — never OTPs or personal messages). -->
+    <uses-permission android:name="android.permission.READ_SMS" />
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
 </manifest>
