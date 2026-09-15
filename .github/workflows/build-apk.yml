@@ -5,6 +5,9 @@ on:
     branches: [main]
   workflow_dispatch: # manual trigger from the Actions tab
 
+permissions:
+  contents: write # allow publishing the APK to GitHub Releases
+
 jobs:
   apk:
     runs-on: ubuntu-latest
