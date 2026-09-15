@@ -259,9 +259,16 @@ export default function Requests() {
                   {copied === 'modal' ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />} Copy link
                 </button>
                 <button className="btn-outline flex-1" onClick={() => shareQr(r)}><Share2 className="h-4 w-4" /> Share</button>
-                <a className="btn-primary flex-1" href={link.replace('upi://', 'data:text/plain;charset=utf-8,')} download={`paisaflow-upi-${r.id}.txt`}>
-                  <Download className="h-4 w-4" /> Save
-                </a>
+                <button
+                  className="btn-primary flex-1"
+                  onClick={async () => {
+                    // Let Android resolve the upi:// intent — GPay / PhonePe / Paytm / BHIM chooser opens.
+                    try { window.location.href = link; }
+                    catch { toast('info', 'Open any UPI app and scan the QR instead'); }
+                  }}
+                >
+                  <Download className="h-4 w-4" /> Open in UPI app
+                </button>
               </div>
             </div>
           </Modal>

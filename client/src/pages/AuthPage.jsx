@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext.jsx';
 import { Spinner } from '../components/ui.jsx';
-import { Eye, EyeOff, Wallet, Target, Repeat, PieChart, Server } from 'lucide-react';
-import { getServerUrl, setServerUrl } from '../lib/api.js';
+import { Eye, EyeOff, Wallet, Target, Repeat, PieChart } from 'lucide-react';
 
 const FEATURES = [
   { icon: Wallet, text: 'Track spending across cash, bank, UPI & cards' },
@@ -20,8 +19,6 @@ export default function AuthPage() {
   const [showPw, setShowPw] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [showServer, setShowServer] = useState(false);
-  const [serverUrl, setServerUrlState] = useState(getServerUrl());
 
   const submit = async (e) => {
     e.preventDefault();
@@ -132,21 +129,6 @@ export default function AuthPage() {
             </button>
           </p>
 
-          {/* Server URL for the packaged Android app */}
-          <div className="mt-4">
-            <button
-              className="mx-auto flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-              onClick={() => setShowServer((s) => !s)}
-            >
-              <Server className="h-3.5 w-3.5" /> Using the Android app? Set server URL
-            </button>
-            {showServer && (
-              <div className="mt-2 flex gap-2">
-                <input className="input" placeholder="https://your-server.onrender.com" value={serverUrl} onChange={(e) => setServerUrlState(e.target.value)} />
-                <button className="btn-outline shrink-0" onClick={() => { setServerUrl(serverUrl.trim()); setError(''); }}>Save</button>
-              </div>
-            )}
-          </div>
         </div>
       </div>
     </div>
