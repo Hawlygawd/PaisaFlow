@@ -1,5 +1,14 @@
 apply plugin: 'com.android.application'
 
+// Align Kotlin stdlib versions (old jdk7/jdk8 jars duplicate classes merged into stdlib 1.8+)
+configurations.all {
+    resolutionStrategy {
+        force 'org.jetbrains.kotlin:kotlin-stdlib:1.8.22'
+        force 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22'
+        force 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22'
+    }
+}
+
 android {
     namespace "com.paisaflow.app"
     compileSdk rootProject.ext.compileSdkVersion
