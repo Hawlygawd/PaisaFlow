@@ -49,12 +49,13 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon --stacktrace
+          cp app/build/outputs/apk/debug/app-debug.apk /tmp/PaisaFlow.apk
 
       - name: Upload APK as build artifact
         uses: actions/upload-artifact@v4
         with:
           name: paisaflow-debug-apk
-          path: client/android/app/build/outputs/apk/debug/app-debug.apk
+          path: /tmp/PaisaFlow.apk
 
       - name: Publish APK to GitHub Releases (main branch only)
         if: github.ref == 'refs/heads/main'
@@ -75,5 +76,5 @@ jobs:
             - 📲 Auto-capture payments from bank SMS (free & offline)
 
             Every new push to `main` rebuilds this APK automatically.
-          files: client/android/app/build/outputs/apk/debug/app-debug.apk
+          files: /tmp/PaisaFlow.apk
           fail_on_unmatched_files: true
