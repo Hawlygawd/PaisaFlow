@@ -1,0 +1,22 @@
+{
+  "name": "paisaflow",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PaisaFlow — personal money tracker for India. Transactions, budgets, goals, recurring, loans, insights. FOLD-style, fully free.",
+  "scripts": {
+    "setup": "npm install && npm --prefix client install",
+    "build": "npm --prefix client run build",
+    "start": "node server/index.js",
+    "dev:server": "node server/index.js",
+    "dev:client": "npm --prefix client run dev"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.10.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^10.0.10"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "appId": "com.paisaflow.app",
+  "appName": "PaisaFlow",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "backgroundColor": "#4f46e5"
+  }
+}

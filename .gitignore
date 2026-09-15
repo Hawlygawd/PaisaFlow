@@ -1,0 +1,28 @@
+# dependencies
+node_modules/
+client/node_modules/
+
+# built web app (CI rebuilds it; Capacitor syncs it into android)
+client/dist/
+
+# app data (SQLite database, JWT secret)
+data/
+
+# logs
+*.log
+
+# OS
+.DS_Store
+
+# Capacitor copies web assets into the android project at sync time
+client/android/app/src/main/assets/public/
+
+# Android / Gradle
+client/android/.gradle/
+client/android/app/build/
+client/android/build/
+client/android/capacitor-cordova-android-plugins/build/
+client/android/local.properties
+
+# test / scratch
+resources/icon-1024.png
